@@ -2,7 +2,7 @@
 
 ## Day 1 - Project Setup and ESP32 Bring-up
 
-**Date:** 23/07/2026
+**Date:** 25/07/2026
 
 ### Objective
 
