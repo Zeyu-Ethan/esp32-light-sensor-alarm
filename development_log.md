@@ -76,3 +76,77 @@ A counter test program printed values from 0 to 4 and then stopped printing. Thi
 - **Goal:** Start learning GPIO output and test controlling an LED using `pinMode()` and `digitalWrite()`.
 - **Tool:** Arduino IDE and ESP32
 - **Target Date:** 26/07/2026
+
+
+## Day 2 - GPIO Output and LED Blink Test
+
+**Date:** 26/07/2026
+
+### Objective
+
+Start learning GPIO output and test controlling an LED using `pinMode()` and `digitalWrite()`.
+
+### Work Completed
+
+- Connected an external LED to ESP32 `GPIO25` through a current-limiting resistor.
+- Set `GPIO25` as an output using `pinMode()`.
+- Used `digitalWrite()` to switch the LED on and off.
+- Used Serial Monitor to print `LED ON` and `LED OFF` messages.
+- Tested the reset button after uploading the program.
+
+### Test / Result
+
+- The program uploaded successfully to the ESP32.
+- The LED blinked at approximately 1-second intervals.
+- Serial Monitor output matched the expected LED states.
+- Pressing the reset button restarted the program successfully.
+
+### Issue 1 - Compilation error caused by incorrect constant name
+
+**Problem:**  
+The program failed to compile with the error `'High' was not declared in this scope`.
+
+**Cause:**  
+Arduino constants are case-sensitive. I wrote `High` instead of `HIGH`.
+
+**Solution:**  
+Changed `High` to `HIGH` in `digitalWrite(ledPin, HIGH);`.
+
+**Test / Result:**  
+After correcting the constant name, the program uploaded successfully.
+
+### Issue 2 - Incorrect use of the power rail during LED wiring
+
+**Problem:**  
+During the first wiring attempt, the `3.3V` pin was connected to the breadboard `+` power rail, and `GPIO25` was also connected to the same `+` rail.
+
+**Cause:**  
+This connection did not match the purpose of the GPIO output test. The aim was to use `GPIO25` as a controllable output signal to switch the LED on and off, not to connect the LED directly to a fixed `3.3V` supply.
+
+**Safety Check:**  
+Before powering the circuit, the wiring was checked again. This helped identify that `GPIO25` and the fixed `3.3V` supply should not be connected to the same power rail for this test.
+
+**Solution:**  
+The `3.3V` wire was removed from the `+` rail. The circuit was changed so that `GPIO25` was used as the controllable output source through a current-limiting resistor and LED to GND.
+
+**Corrected Circuit:**  
+`GPIO25 → resistor → LED → GND`
+
+**Test / Result:**  
+After correcting the wiring and uploading the program, the LED blinked at approximately 1-second intervals. The Serial Monitor output matched the LED state, showing `LED ON` and `LED OFF`.
+
+### Lessons Learned
+
+- GPIO pins can be configured as outputs using `pinMode()`.
+- `digitalWrite()` can set a GPIO output to `HIGH` or `LOW`.
+- `HIGH` and `LOW` must be written in uppercase.
+- ESP32 outputs approximately 3.3V when a GPIO pin is set to `HIGH`.
+- Serial Monitor can be used to confirm program behaviour while observing hardware output.
+- Verify can check code syntax before uploading to the ESP32.
+- Circuit wiring should be checked before powering the board to reduce the risk of short circuits or incorrect connections.
+
+### Tasks To Do
+
+- **Goal:** Read analog values from the LDR sensor module using `analogRead()`.
+- **Tool:** Arduino IDE, ESP32, LDR sensor module
+- **Target Date:** 27/07/2026
