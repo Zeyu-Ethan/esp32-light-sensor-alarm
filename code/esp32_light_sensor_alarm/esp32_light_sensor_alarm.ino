@@ -1,24 +1,23 @@
 // ESP32 Light Sensor Alarm System
-// Day 2 - GPIO Output and LED Blink Test
-// LED connected to GPIO25 through a current-limiting resistor(330Ω)
+// LDR Sensor Module Analog Input Test
+// LDR module AO connected to GPIO34
 
-const int ledPin = 25; //LED connected to GPIO25
+const int ldrPin = 34;
 
 void setup() {
-  pinMode(ledPin, OUTPUT); //set ledPin as output
+  pinMode(ldrPin, INPUT);
 
   Serial.begin(115200);
   delay(1000);
 
-  Serial.println("LED GPIO output test started");
+  Serial.println("LDR analog input test started");
 }
 
 void loop() {
-  digitalWrite(ledPin, HIGH);
-  Serial.println("LED ON");
-  delay(1000);
+  int ldrValue = analogRead(ldrPin);
 
-  digitalWrite(ledPin, LOW);
-  Serial.println("LED OFF");
-  delay(1000);
+  Serial.print("LDR AO value: ");
+  Serial.println(ldrValue);
+
+  delay(500);
 }
