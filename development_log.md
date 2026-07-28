@@ -150,3 +150,47 @@ After correcting the wiring and uploading the program, the LED blinked at approx
 - **Goal:** Read analog values from the LDR sensor module using `analogRead()`.
 - **Tool:** Arduino IDE, ESP32, LDR sensor module
 - **Target Date:** 27/07/2026
+
+## Day 3 - LDR Analog Input and Threshold LED Control
+
+**Date:** 28/07/2026
+
+### Schedule Note
+
+The LDR analog input test was originally planned for 27/07/2026, but it was moved to 28/07/2026 due to limited available time.
+
+### Objective
+
+Test the LDR sensor module using ESP32 analog input and use the measured values to control an LED with a threshold.
+
+### Work Completed
+
+- Tested the LDR sensor module using analog input on `GPIO34`.
+- Recorded ADC value ranges under bedroom light, covered condition, and phone flashlight.
+- Selected an initial threshold value of `1200` based on the measured sensor values.
+- Implemented threshold-based LED control using `GPIO25`.
+
+### Test / Result
+
+| Condition | ADC Value Range | System Result |
+|---|---:|---|
+| Bedroom light | 656-755 | LED OFF |
+| Covered by hand | 1680-2651 | LED ON |
+| Phone flashlight | 272-292 | LED OFF |
+
+The test showed that the ADC value increased when the LDR sensor was covered and decreased when the sensor was exposed to stronger light. With the threshold set to `1200`, the LED turned on in dark conditions and turned off in brighter conditions.
+
+### Lessons Learned
+
+- The ESP32 ADC reads voltage, not resistance directly.
+- Although an LDR has lower resistance under stronger light, the ADC value depends on the sensor module's internal voltage divider circuit.
+- In this module setup, stronger light produced a lower ADC value and darker conditions produced a higher ADC value.
+- Sensor values should be measured before choosing a threshold.
+- `const` can be used for fixed configuration values such as pin numbers and threshold values.
+- `Serial.print()` can be used with `Serial.println()` to display a label, value, and status on the same line.
+
+### Tasks To Do
+
+- **Goal:** Add buzzer output to provide an audible alarm when the dark condition is detected.
+- **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, buzzer
+- **Target Date:** 29/07/2026
