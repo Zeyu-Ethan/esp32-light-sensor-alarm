@@ -77,7 +77,6 @@ A counter test program printed values from 0 to 4 and then stopped printing. Thi
 - **Tool:** Arduino IDE and ESP32
 - **Target Date:** 26/07/2026
 
-
 ## Day 2 - GPIO Output and LED Blink Test
 
 **Date:** 26/07/2026
@@ -194,3 +193,60 @@ The test showed that the ADC value increased when the LDR sensor was covered and
 - **Goal:** Add buzzer output to provide an audible alarm when the dark condition is detected.
 - **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, buzzer
 - **Target Date:** 29/07/2026
+
+## Day 4 - Buzzer Output and Alarm Integration
+
+**Date:** 29/07/2026
+
+### Objective
+
+Test the ESPBlock onboard buzzer as an output device and integrate it with the LDR threshold alarm logic.
+
+### Work Completed
+
+- Tested the ESPBlock onboard buzzer using `GPIO27`.
+- Confirmed that the onboard buzzer can be controlled by ESP32 digital output.
+- Integrated the buzzer with the existing LDR threshold and LED control logic.
+- Updated the alarm logic so that dark conditions trigger both visual and audible alerts.
+
+### Test / Result
+
+| Condition | Expected Result | Actual Result |
+|---|---|---|
+| Normal room light | LED OFF, buzzer OFF | Passed |
+| LDR covered by hand | LED ON, buzzer ON | Passed |
+| LDR exposed to stronger light | LED OFF, buzzer OFF | Passed |
+
+The test confirmed that the LDR threshold can control both the LED and ESPBlock onboard buzzer. When the LDR value was above the threshold, the LED turned on and the buzzer sounded. When the LDR value was below the threshold, both outputs turned off.
+
+### Issues / Fixes
+
+#### Issue 1 - Buzzer briefly turned on during startup
+
+**Problem:**  
+The intended startup state was LED off and buzzer off. However, after uploading the first version of the integrated code, the buzzer briefly turned on during startup.
+
+**Cause:**  
+The ESPBlock onboard buzzer is active-low, so `LOW` turns it on and `HIGH` turns it off. In the first version of the code, the buzzer was set to `HIGH` after the startup delay, which allowed it to briefly turn on before reaching the intended off state.
+
+**Fix:**  
+The buzzer was set to the off state earlier in `setup()` by moving `digitalWrite(buzzerPin, HIGH);` before the startup delay.
+
+**Result:**  
+After uploading the revised code, the buzzer stayed off during initialization as intended.
+
+### Lessons Learned
+
+- The ESPBlock onboard buzzer can be controlled using `GPIO27`.
+- The ESPBlock onboard buzzer is active-low, so `LOW` turns it on and `HIGH` turns it off.
+- Output devices should be set to their intended initial states before startup delays to reduce unwanted behaviour during initialization.
+
+### Future Improvement
+
+- Refine the threshold value because the current value of `1200` is too sensitive and can be triggered by weak shadows.
+
+### Tasks To Do
+
+- **Goal:** Refine the alarm threshold and improve the alarm behaviour to reduce false triggering.
+- **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, ESPBlock onboard buzzer
+- **Target Date:** 30/07/2026
