@@ -1,28 +1,26 @@
 // ESP32 Light Sensor Alarm System
-// LDR Threshold LED and Buzzer Alarm Test
-// LDR module AO connected to GPIO34
-// LED connected to GPIO25 through a current-limiting resistor
-// ESPBlock onboard buzzer controlled by GPIO27
-// The buzzer is active-low: LOW = ON, HIGH = OFF
+// Threshold Refinement and False Trigger Reduction Test
 
-const int ldrPin = 34;
-const int ledPin = 25;
-const int buzzerPin = 27;
-const int threshold = 1200;
+const int ldrPin = 34;       // LDR module AO connected to GPIO34.
+const int ledPin = 25;       // External LED connected to GPIO25.
+const int buzzerPin = 27;    // ESPBlock onboard buzzer controlled by GPIO27.
+
+const int threshold = 2000;
+const int confirmDelay = 1000;
 
 void setup()
 {
   pinMode(ldrPin, INPUT);
-  pinMode(ledPin, OUTPUT);
-  pinMode(buzzerPin, OUTPUT);
 
- digitalWrite(ledPin, LOW);
- digitalWrite(buzzerPin, HIGH);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);  // LED off at startup.
+
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, HIGH);  // Buzzer off because it is active-low.
 
   Serial.begin(115200);
-  delay(1000);
- 
-  Serial.println("LDR threshold LED and buzzer alarm test started");
+
+  Serial.println("Threshold refinement and false trigger reduction test started");
 }
 
 void loop()
@@ -32,11 +30,27 @@ void loop()
   Serial.print("LDR AO value: ");
   Serial.print(ldrValue);
 
-  if (ldrValue > threshold)
+  if (ldrValue > threshold)  // Higher ADC value means darker condition for this LDR module.
   {
-    digitalWrite(ledPin, HIGH);
-    digitalWrite(buzzerPin, LOW);
-    Serial.println(" | Status: DARK - LED ON - BUZZER ON");
+    delay(confirmDelay);  // Confirm the dark condition before triggering the alarm.
+
+    int confirmedLdrValue = analogRead(ldrPin);
+
+    Serial.print(" | Confirmed value: ");
+    Serial.print(confirmedLdrValue);
+
+    if (confirmedLdrValue > threshold)
+    {
+      digitalWrite(ledPin, HIGH);
+      digitalWrite(buzzerPin, LOW);
+      Serial.println(" | Status: DARK CONFIRMED - LED ON - BUZZER ON");
+    }
+    else
+    {
+      digitalWrite(ledPin, LOW);
+      digitalWrite(buzzerPin, HIGH);
+      Serial.println(" | Status: FALSE TRIGGER - LED OFF - BUZZER OFF");
+    }
   }
   else
   {
