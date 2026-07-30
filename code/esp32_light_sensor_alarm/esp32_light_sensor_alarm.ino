@@ -1,9 +1,10 @@
 // ESP32 Light Sensor Alarm System
-// Threshold Refinement and False Trigger Reduction Test
+// Alarm Enable Switch Integration Test
 
 const int ldrPin = 34;       // LDR module AO connected to GPIO34.
 const int ledPin = 25;       // External LED connected to GPIO25.
 const int buzzerPin = 27;    // ESPBlock onboard buzzer controlled by GPIO27.
+const int alarmSwitchPin = 26;  // DIP switch 1 connected to GPIO26.
 
 const int threshold = 2000;
 const int confirmDelay = 1000;
@@ -11,28 +12,41 @@ const int confirmDelay = 1000;
 void setup()
 {
   pinMode(ldrPin, INPUT);
+  pinMode(alarmSwitchPin, INPUT);
 
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);  // LED off at startup.
+  digitalWrite(ledPin, LOW);
 
   pinMode(buzzerPin, OUTPUT);
   digitalWrite(buzzerPin, HIGH);  // Buzzer off because it is active-low.
 
   Serial.begin(115200);
 
-  Serial.println("Threshold refinement and false trigger reduction test started");
+  Serial.println("Alarm enable switch integration test started");
 }
 
 void loop()
 {
+  int alarmSwitchState = digitalRead(alarmSwitchPin);
+
+  if (alarmSwitchState == LOW)
+  {
+    digitalWrite(ledPin, LOW);
+    digitalWrite(buzzerPin, HIGH);
+
+    Serial.println("Alarm disabled - LED OFF - BUZZER OFF");
+    delay(500);
+    return;
+  }
+
   int ldrValue = analogRead(ldrPin);
 
-  Serial.print("LDR AO value: ");
+  Serial.print("Alarm enabled | LDR AO value: ");
   Serial.print(ldrValue);
 
   if (ldrValue > threshold)  // Higher ADC value means darker condition for this LDR module.
   {
-    delay(confirmDelay);  // Confirm the dark condition before triggering the alarm.
+    delay(confirmDelay);
 
     int confirmedLdrValue = analogRead(ldrPin);
 
