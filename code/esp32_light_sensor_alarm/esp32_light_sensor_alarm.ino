@@ -1,11 +1,12 @@
 // ESP32 Light Sensor Alarm System
-// Alarm Enable and Buzzer Mute Switch Integration Test
+// Alarm Enable, Buzzer Mute and LED Enable Switch Integration Test
 
 const int ldrPin = 34;            // LDR module AO connected to GPIO34.
 const int ledPin = 25;            // External LED connected to GPIO25.
 const int buzzerPin = 27;         // ESPBlock onboard buzzer controlled by GPIO27.
 const int alarmSwitchPin = 26;    // DIP switch 1 connected to GPIO26.
 const int buzzerSwitchPin = 32;   // DIP switch 2 connected to GPIO32.
+const int ledSwitchPin = 33;      // DIP switch 3 connected to GPIO33.
 
 const int threshold = 2000;
 const int confirmDelay = 1000;
@@ -15,23 +16,26 @@ void setup()
   pinMode(ldrPin, INPUT);
   pinMode(alarmSwitchPin, INPUT);
   pinMode(buzzerSwitchPin, INPUT);
+  pinMode(ledSwitchPin, INPUT);
 
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
   pinMode(buzzerPin, OUTPUT);
-  digitalWrite(buzzerPin, HIGH);  // Buzzer off because it is active-low.
+  digitalWrite(buzzerPin, HIGH);  // Buzzer off because the ESPBlock onboard buzzer is active-low.
 
   Serial.begin(115200);
 
-  Serial.println("Alarm enable and buzzer mute switch integration test started");
+  Serial.println("Alarm enable, buzzer mute and LED enable switch integration test started");
 }
 
 void loop()
 {
   int alarmSwitchState = digitalRead(alarmSwitchPin);
   int buzzerSwitchState = digitalRead(buzzerSwitchPin);
+  int ledSwitchState = digitalRead(ledSwitchPin);
 
+  // If the alarm enable switch is OFF, the system is disabled and all outputs stay off.
   if (alarmSwitchState == LOW)
   {
     digitalWrite(ledPin, LOW);
@@ -44,9 +48,10 @@ void loop()
 
   int ldrValue = analogRead(ldrPin);
 
-  Serial.print("Alarm enabled | Buzzer switch: ");
+  Serial.print("Alarm enabled");
 
-  if (buzzerSwitchState == HIGH)
+  Serial.print(" | LED switch: ");
+  if (ledSwitchState == HIGH)
   {
     Serial.print("ON");
   }
@@ -55,12 +60,22 @@ void loop()
     Serial.print("OFF");
   }
 
+  Serial.print(" | Buzzer switch: ");
+  if (buzzerSwitchState == HIGH)
+  {
+    Serial.print("ON");
+  }
+  else
+  {
+    Serial.print("MUTED");
+  }
+
   Serial.print(" | LDR AO value: ");
   Serial.print(ldrValue);
 
   if (ldrValue > threshold)  // Higher ADC value means darker condition for this LDR module.
   {
-    delay(confirmDelay);
+    delay(confirmDelay);  // Confirm that the dark condition remains present before triggering the alarm.
 
     int confirmedLdrValue = analogRead(ldrPin);
 
@@ -69,17 +84,28 @@ void loop()
 
     if (confirmedLdrValue > threshold)
     {
-      digitalWrite(ledPin, HIGH);
+      Serial.print(" | Status: DARK CONFIRMED");
+
+      if (ledSwitchState == HIGH)
+      {
+        digitalWrite(ledPin, HIGH);
+        Serial.print(" - LED ON");
+      }
+      else
+      {
+        digitalWrite(ledPin, LOW);
+        Serial.print(" - LED DISABLED");
+      }
 
       if (buzzerSwitchState == HIGH)
       {
         digitalWrite(buzzerPin, LOW);
-        Serial.println(" | Status: DARK CONFIRMED - LED ON - BUZZER ON");
+        Serial.println(" - BUZZER ON");
       }
       else
       {
         digitalWrite(buzzerPin, HIGH);
-        Serial.println(" | Status: DARK CONFIRMED - LED ON - BUZZER MUTED");
+        Serial.println(" - BUZZER MUTED");
       }
     }
     else
