@@ -250,3 +250,93 @@ After uploading the revised code, the buzzer stayed off during initialization as
 - **Goal:** Refine the alarm threshold and improve the alarm behaviour to reduce false triggering.
 - **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, ESPBlock onboard buzzer
 - **Target Date:** 30/07/2026
+
+## Day 5 - Threshold Refinement and Alarm Control Switches
+
+**Date:** 30/07/2026
+
+### Objective
+
+Refine the alarm trigger behaviour and add configurable switch controls for the light sensor alarm system.
+
+### Work Completed
+
+- Tested additional LDR readings under different lighting and shadow conditions.
+- Updated the alarm threshold from `1200` to `2000` to reduce unwanted triggering from weak shadows.
+- Added a `1000 ms` confirmation delay before activating the alarm output.
+- Added DIP switch 1 as an alarm enable switch using `GPIO26`.
+- Added DIP switch 2 as a buzzer mute switch using `GPIO32`.
+- Added DIP switch 3 as an LED enable switch using `GPIO33`.
+- Integrated the three switch inputs with the existing LDR, LED, and buzzer alarm logic.
+
+### Test / Result
+
+#### Threshold Refinement Test
+
+| Condition | ADC Value Range | Result with Threshold `2000` |
+|---|---:|---|
+| Bedroom light | 732-855 | Alarm not triggered |
+| Weak shadow | 1571-1847 | Alarm not triggered |
+| LDR covered by hand | 2323-2939 | Alarm triggered |
+| Room light off | 3933-4047 | Alarm triggered |
+
+The threshold was updated to `2000` because it separated weak shadows from stronger dark conditions more reliably. A `1000 ms` confirmation delay was added so that the alarm only triggers when the dark condition remains present.
+
+#### Switch Control Test
+
+| Test | Switch State | LDR Condition | Expected Result | Actual Result |
+|---|---|---|---|---|
+| Alarm disabled | Switch 1 OFF | Covered / dark | LED OFF, buzzer OFF | Passed |
+| Alarm enabled | Switch 1 ON | Covered / dark | Alarm logic active | Passed |
+| Buzzer muted | Switch 1 ON, Switch 2 OFF | Covered / dark | LED ON, buzzer OFF | Passed |
+| Buzzer enabled | Switch 1 ON, Switch 2 ON | Covered / dark | LED ON, buzzer ON | Passed |
+| LED disabled | Switch 1 ON, Switch 3 OFF | Covered / dark | LED OFF, buzzer controlled by Switch 2 | Passed |
+| LED enabled | Switch 1 ON, Switch 3 ON | Covered / dark | LED ON when dark is confirmed | Passed |
+
+The test confirmed that the alarm system can now be configured using three independent switch inputs. Switch 1 controls whether the alarm system is enabled, Switch 2 controls whether the buzzer is allowed to sound, and Switch 3 controls whether the LED is allowed to turn on.
+
+### Issues / Fixes
+
+#### Issue 1 - Alarm was too sensitive to weak shadows
+
+**Problem:**  
+The previous threshold value made the alarm too sensitive. Weak shadows over the LDR could trigger the LED and buzzer.
+
+**Cause:**  
+The threshold value was too low for the measured lighting conditions. A single ADC reading above the threshold could also trigger the alarm immediately, even if the dark condition was only temporary.
+
+**Fix:**  
+Additional ADC readings were recorded under bedroom light, weak shadow, hand-covered, and room-light-off conditions. The threshold was increased to `2000`, and a `1000 ms` confirmation delay was added before activating the alarm.
+
+**Result:**  
+Weak shadows no longer triggered the alarm, while stronger dark conditions such as covering the LDR or turning off the room light still triggered the alarm successfully.
+
+#### Issue 2 - Blocking switch-control structure was not suitable for the main loop
+
+**Problem:**  
+A `while` loop was considered for handling switch-controlled alarm states, but this structure was not suitable for the current system.
+
+**Cause:**  
+A `while` loop can block the main program flow if it remains inside one condition. This would make the system less suitable for continuously checking multiple inputs, including the alarm enable switch, buzzer mute switch, LED enable switch, and LDR sensor value.
+
+**Fix:**  
+The switch logic was implemented using `if` conditions inside `loop()`. The alarm enable switch uses an early `return` when the system is disabled, allowing the program to skip the alarm logic for that loop cycle and then check the switch state again in the next cycle.
+
+**Result:**  
+The program can continuously check the LDR and all switch inputs without being locked inside a blocking loop structure.
+
+### Lessons Learned
+
+- A suitable pull-down resistor, such as `10kΩ`, should be used for DIP switch input circuits instead of a low-value resistor used for LED current limiting.
+- Each independent switch function needs its own GPIO input.
+- Using an early `return` is useful when a disabled state should skip the remaining alarm logic in the current `loop()` cycle.
+
+### Future Improvement
+
+- Optimise Serial Monitor output after the main switch functions are completed.
+
+### Tasks To Do
+
+- **Goal:** Review and clean up the project code, then start improving the README and project documentation.
+- **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, ESPBlock onboard buzzer, DIP switch
+- **Target Date:** 31/07/2026
