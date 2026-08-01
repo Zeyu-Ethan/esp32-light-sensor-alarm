@@ -62,6 +62,25 @@ flowchart LR
 
 *Table 1. Block description of the ESP32 light sensor alarm system.*
 
+## Hardware
+
+- ESP32 development board
+- ESPBlock expansion board
+- LDR sensor module
+- External LED
+- 330Ω resistor for LED current limiting
+- 10kΩ resistors for DIP switch pull-down inputs
+- 4-position DIP switch
+- ESPBlock onboard buzzer
+- Jumper wires
+- USB cable
+
+## Hardware Prototype
+
+![Final V1 prototype overview](media/photos/final_prototype_overview.jpg)
+
+*Figure 2. Final V1 working prototype showing the LDR sensor module, external LED, ESPBlock onboard buzzer, and DIP switch controls.*
+
 ## Pin Assignment
 
 | Component | ESP32 Pin | Purpose |
@@ -74,6 +93,23 @@ flowchart LR
 | DIP switch 3 | `GPIO33` | LED enable control |
 
 *Table 2. Pin assignment for the current working prototype.*
+
+## Wiring Reference
+
+The wire colours below describe the current V1 prototype wiring shown in Figure 2.
+
+| Wire Colour | Connection |
+|---|---|
+| Red wire | VCC connection |
+| Black wire | GND connection |
+| Brown wire | LDR module `AO` connected to `GPIO34` |
+| Orange wire | External LED connected to `GPIO25` |
+| Purple wire | ESPBlock onboard buzzer controlled by `GPIO27` |
+| Yellow wire | DIP switch 1 connected to `GPIO26` |
+| Green wire | DIP switch 2 connected to `GPIO32` |
+| Blue wire | DIP switch 3 connected to `GPIO33` |
+
+*Table 3. Wiring reference for the V1 hardware prototype photo.*
 
 ## Testing Summary
 
@@ -89,7 +125,7 @@ flowchart LR
 | Buzzer mute switch | DIP switch 2 enables or mutes buzzer output | Passed |
 | LED enable switch | DIP switch 3 enables or disables LED output | Passed |
 
-*Table 3. Testing summary for the current working prototype.*
+*Table 4. Testing summary for the current working prototype.*
 
 ## Development Plan
 
@@ -114,20 +150,7 @@ gantt
     Testing, README and project report   :active, 2026-07-30, 6d
 ```
 
-*Figure 2. Flexible development plan for the ESP32 light sensor alarm system.*
-
-## Hardware
-
-- ESP32 development board
-- ESPBlock expansion board
-- LDR sensor module
-- External LED
-- 330Ω resistor for LED current limiting
-- 10kΩ resistors for DIP switch pull-down inputs
-- 4-position DIP switch
-- ESPBlock onboard buzzer
-- Jumper wires
-- USB cable
+*Figure 3. Flexible development plan for the ESP32 light sensor alarm system.*
 
 ## Development Environment
 
@@ -143,7 +166,8 @@ Possible future improvements include:
 
 - Adjustable threshold using software configuration or additional input control
 - Improved Serial Monitor output formatting for clearer debugging
-- Data logging
+- More reliable user input hardware, such as a breadboard-friendly switch module or a soldered prototyping board
+- Automated light-level data logging for recording sensor values and alarm states
 - Wi-Fi monitoring
 - Web dashboard
 - Comparison between analog output `AO` and digital output `DO`
