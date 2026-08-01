@@ -81,6 +81,14 @@ flowchart LR
 
 *Figure 2. Final V1 working prototype showing the LDR sensor module, external LED, ESPBlock onboard buzzer, and DIP switch controls.*
 
+## Demo Video
+
+A short V1 demonstration video is available here:
+
+[Watch the V1 demo video](https://youtu.be/25t3WMKX8aA)
+
+*Video 1. V1 demonstration of the ESP32 light sensor alarm system.*
+
 ## Pin Assignment
 
 | Component | ESP32 Pin | Purpose |
