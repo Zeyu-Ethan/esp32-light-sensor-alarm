@@ -1,5 +1,5 @@
 // ESP32 Light Sensor Alarm System
-// Alarm Enable, Buzzer Mute and LED Enable Switch Integration Test
+// V1 Final Working Prototype with LDR, LED, Buzzer and DIP Switch Control
 
 const int ldrPin = 34;            // LDR module AO connected to GPIO34.
 const int ledPin = 25;            // External LED connected to GPIO25.
@@ -8,8 +8,8 @@ const int alarmSwitchPin = 26;    // DIP switch 1 connected to GPIO26.
 const int buzzerSwitchPin = 32;   // DIP switch 2 connected to GPIO32.
 const int ledSwitchPin = 33;      // DIP switch 3 connected to GPIO33.
 
-const int threshold = 2000;
-const int confirmDelay = 1000;
+const int threshold = 2000;       // ADC threshold for detecting a dark condition.
+const int confirmDelay = 1000;    // Delay before taking a second reading to confirm darkness.
 
 void setup()
 {
@@ -26,7 +26,7 @@ void setup()
 
   Serial.begin(115200);
 
-  Serial.println("Alarm enable, buzzer mute and LED enable switch integration test started");
+  Serial.println("ESP32 light sensor alarm V1 prototype started");
 }
 
 void loop()
