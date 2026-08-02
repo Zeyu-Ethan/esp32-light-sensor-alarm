@@ -108,7 +108,7 @@ The wire colours below describe the current V1 prototype wiring shown in Figure 
 
 | Wire Colour | Connection |
 |---|---|
-| Red wire | VCC connection |
+| Red wire | VCC / power connection |
 | Black wire | GND connection |
 | Brown wire | LDR module `AO` connected to `GPIO34` |
 | Orange wire | External LED connected to `GPIO25` |
@@ -134,6 +134,11 @@ The wire colours below describe the current V1 prototype wiring shown in Figure 
 | LED enable switch | DIP switch 3 enables or disables LED output | Passed |
 
 *Table 4. Testing summary for the current working prototype.*
+
+## Project Documentation
+
+- [Development Log](development_log.md)
+- [Final Testing Notes](docs/final_testing_notes.md)
 
 ## Development Plan
 
@@ -168,6 +173,10 @@ gantt
 - Serial Monitor baud rate: 115200
 - GitHub for version control and documentation
 
+## Additional Experiment
+
+An additional AO vs DO comparison test is included in `code/ao_do_comparison_test/`. This test compares the LDR module analog output `AO` with its digital comparator output `DO` to show the difference between continuous ADC readings and hardware-comparator digital signals.
+
 ## Future Improvements
 
 Possible future improvements include:
@@ -178,4 +187,3 @@ Possible future improvements include:
 - Automated light-level data logging for recording sensor values and alarm states
 - Wi-Fi monitoring
 - Web dashboard
-- Comparison between analog output `AO` and digital output `DO`
