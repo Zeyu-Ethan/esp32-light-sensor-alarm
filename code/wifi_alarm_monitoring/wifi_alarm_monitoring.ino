@@ -1,12 +1,9 @@
 // ESP32 Light Sensor Alarm System
-// V3 Wi-Fi Web Monitoring Test with LDR AO Value
+// V3 Move Wi-Fi credentials to ignored secrets file
 
 #include <WiFi.h>
 #include <WebServer.h>
-
-// Replace these placeholder values with local Wi-Fi details before testing.
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
+#include "secrets.h"
 
 const int ldrPin = 34;       // LDR module AO connected to GPIO34.
 
