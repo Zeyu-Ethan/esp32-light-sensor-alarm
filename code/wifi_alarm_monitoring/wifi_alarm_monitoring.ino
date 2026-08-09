@@ -1,57 +1,233 @@
 // ESP32 Light Sensor Alarm System
-// V3 Move Wi-Fi credentials to ignored secrets file
+// V3 Integrated alarm logic with local web monitoring
 
 #include <WiFi.h>
 #include <WebServer.h>
 #include "secrets.h"
 
-const int ldrPin = 34;       // LDR module AO connected to GPIO34.
+// Pin assignment.
+const int ldrPin = 34;            // LDR module AO connected to GPIO34.
+const int ledPin = 25;            // External LED connected to GPIO25.
+const int buzzerPin = 27;         // ESPBlock onboard buzzer controlled by GPIO27.
+const int alarmSwitchPin = 26;    // DIP switch 1: alarm enable control.
+const int buzzerSwitchPin = 32;   // DIP switch 2: buzzer enable / mute control.
+const int ledSwitchPin = 33;      // DIP switch 3: LED enable control.
 
-const int threshold = 2000;  // ADC threshold for detecting a dark condition.
+// Alarm configuration.
+const int threshold = 2000;              // ADC threshold for detecting a dark condition.
+const unsigned long confirmDelay = 1000; // Time required to confirm a dark condition.
+const unsigned long updateInterval = 500; // Main sensor update interval.
 
-WebServer server(80);        // Create a web server on the default HTTP port 80.
+// Web server on default HTTP port 80.
+WebServer server(80);
 
-void handleHomePage()
+// System state variables.
+int ldrValue = 0;
+
+bool alarmSwitchState = false;
+bool buzzerSwitchState = false;
+bool ledSwitchState = false;
+
+bool darkCondition = false;
+bool alarmTriggered = false;
+bool ledOutputState = false;
+bool buzzerOutputState = false;
+
+// Variables used for non-blocking dark-condition confirmation.
+bool darkTimingStarted = false;
+unsigned long darkStartTime = 0;
+unsigned long lastUpdateTime = 0;
+
+void updateAlarmSystem()
 {
-  // Read the latest LDR value when the browser requests the page.
-  int ldrValue = analogRead(ldrPin);
+  ldrValue = analogRead(ldrPin);
 
-  String lightCondition;
+  alarmSwitchState = digitalRead(alarmSwitchPin);
+  buzzerSwitchState = digitalRead(buzzerSwitchPin);
+  ledSwitchState = digitalRead(ledSwitchPin);
+
+  if (alarmSwitchState == LOW)
+  {
+    darkCondition = false;
+    alarmTriggered = false;
+    ledOutputState = false;
+    buzzerOutputState = false;
+    darkTimingStarted = false;
+
+    digitalWrite(ledPin, LOW);
+    digitalWrite(buzzerPin, HIGH);  // Active-low buzzer: HIGH means OFF.
+
+    return;
+  }
 
   if (ldrValue > threshold)
   {
-    lightCondition = "Dark";
+    if (darkTimingStarted == false)
+    {
+      darkTimingStarted = true;
+      darkStartTime = millis();
+    }
+
+    if (millis() - darkStartTime >= confirmDelay)
+    {
+      darkCondition = true;
+      alarmTriggered = true;
+    }
+    else
+    {
+      darkCondition = false;
+      alarmTriggered = false;
+    }
   }
   else
   {
-    lightCondition = "Light";
+    darkCondition = false;
+    alarmTriggered = false;
+    darkTimingStarted = false;
   }
 
-  // Build a simple HTML page to display the sensor reading.
+  if (alarmTriggered == true && ledSwitchState == HIGH)
+  {
+    ledOutputState = true;
+    digitalWrite(ledPin, HIGH);
+  }
+  else
+  {
+    ledOutputState = false;
+    digitalWrite(ledPin, LOW);
+  }
+
+  if (alarmTriggered == true && buzzerSwitchState == HIGH)
+  {
+    buzzerOutputState = true;
+    digitalWrite(buzzerPin, LOW);   // Active-low buzzer: LOW means ON.
+  }
+  else
+  {
+    buzzerOutputState = false;
+    digitalWrite(buzzerPin, HIGH);  // Active-low buzzer: HIGH means OFF.
+  }
+
+  Serial.print("LDR AO value: ");
+  Serial.print(ldrValue);
+
+  Serial.print(" | Alarm switch: ");
+  Serial.print(alarmSwitchState == HIGH ? "ON" : "OFF");
+
+  Serial.print(" | LED switch: ");
+  Serial.print(ledSwitchState == HIGH ? "ON" : "OFF");
+
+  Serial.print(" | Buzzer switch: ");
+  Serial.print(buzzerSwitchState == HIGH ? "ON" : "MUTED");
+
+  Serial.print(" | Alarm status: ");
+  Serial.println(alarmTriggered == true ? "TRIGGERED" : "NORMAL");
+}
+
+String getOnOffText(bool state)
+{
+  if (state == true)
+  {
+    return "ON";
+  }
+  else
+  {
+    return "OFF";
+  }
+}
+
+String getAlarmStatusText()
+{
+  if (alarmSwitchState == LOW)
+  {
+    return "Alarm Disabled";
+  }
+
+  if (alarmTriggered == true)
+  {
+    return "Alarm Triggered";
+  }
+
+  return "Normal";
+}
+
+String getLightConditionText()
+{
+  if (darkCondition == true)
+  {
+    return "Dark";
+  }
+  else
+  {
+    return "Light";
+  }
+}
+
+void handleHomePage()
+{
   String html = "";
 
   html += "<!DOCTYPE html>";
   html += "<html>";
   html += "<head>";
   html += "<title>ESP32 Light Sensor Alarm System</title>";
+  html += "<meta http-equiv='refresh' content='2'>";
+  html += "<style>";
+  html += "body { font-family: Arial, sans-serif; margin: 30px; }";
+  html += "h1 { color: #222; }";
+  html += "table { border-collapse: collapse; width: 420px; }";
+  html += "td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }";
+  html += "th { background-color: #f2f2f2; }";
+  html += "</style>";
   html += "</head>";
+
   html += "<body>";
   html += "<h1>ESP32 Light Sensor Alarm System</h1>";
-  html += "<h2>Local Web Monitoring</h2>";
+  html += "<h2>Local Wi-Fi Alarm Monitoring</h2>";
 
-  html += "<p><strong>LDR AO Value:</strong> ";
+  html += "<table>";
+  html += "<tr><th>Parameter</th><th>Status</th></tr>";
+
+  html += "<tr><td>LDR AO Value</td><td>";
   html += ldrValue;
-  html += "</p>";
+  html += "</td></tr>";
 
-  html += "<p><strong>Light Condition:</strong> ";
-  html += lightCondition;
-  html += "</p>";
+  html += "<tr><td>Light Condition</td><td>";
+  html += getLightConditionText();
+  html += "</td></tr>";
 
-  html += "<p>Refresh the page to update the sensor reading.</p>";
+  html += "<tr><td>Alarm Status</td><td>";
+  html += getAlarmStatusText();
+  html += "</td></tr>";
+
+  html += "<tr><td>Alarm Switch</td><td>";
+  html += alarmSwitchState == HIGH ? "ON" : "OFF";
+  html += "</td></tr>";
+
+  html += "<tr><td>LED Switch</td><td>";
+  html += ledSwitchState == HIGH ? "ON" : "OFF";
+  html += "</td></tr>";
+
+  html += "<tr><td>Buzzer Switch</td><td>";
+  html += buzzerSwitchState == HIGH ? "ON" : "MUTED";
+  html += "</td></tr>";
+
+  html += "<tr><td>LED Output</td><td>";
+  html += getOnOffText(ledOutputState);
+  html += "</td></tr>";
+
+  html += "<tr><td>Buzzer Output</td><td>";
+  html += getOnOffText(buzzerOutputState);
+  html += "</td></tr>";
+
+  html += "</table>";
+
+  html += "<p>This page refreshes automatically every 2 seconds.</p>";
+  html += "<p>Only devices on the same local Wi-Fi network can access this page.</p>";
+
   html += "</body>";
   html += "</html>";
 
-  // Send the generated HTML page back to the browser.
   server.send(200, "text/html", html);
 }
 
@@ -59,9 +235,19 @@ void setup()
 {
   pinMode(ldrPin, INPUT);
 
+  pinMode(ledPin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+
+  pinMode(alarmSwitchPin, INPUT);
+  pinMode(buzzerSwitchPin, INPUT);
+  pinMode(ledSwitchPin, INPUT);
+
+  digitalWrite(ledPin, LOW);
+  digitalWrite(buzzerPin, HIGH);  // Active-low buzzer starts OFF.
+
   Serial.begin(115200);
 
-  Serial.println("ESP32 Wi-Fi light sensor monitoring test started");
+  Serial.println("ESP32 Wi-Fi alarm monitoring system started");
   Serial.print("Connecting to Wi-Fi: ");
   Serial.println(ssid);
 
@@ -79,9 +265,7 @@ void setup()
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  // Run handleHomePage() when a browser visits the root page "/".
   server.on("/", handleHomePage);
-
   server.begin();
 
   Serial.println("Web server started");
@@ -89,6 +273,11 @@ void setup()
 
 void loop()
 {
-  // Keep checking for browser requests.
   server.handleClient();
+
+  if (millis() - lastUpdateTime >= updateInterval)
+  {
+    lastUpdateTime = millis();
+    updateAlarmSystem();
+  }
 }
