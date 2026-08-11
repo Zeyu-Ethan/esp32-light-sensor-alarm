@@ -340,3 +340,122 @@ The program can continuously check the LDR and all switch inputs without being l
 - **Goal:** Review and clean up the project code, then start improving the README and project documentation.
 - **Tool:** Arduino IDE, ESP32, LDR sensor module, LED, ESPBlock onboard buzzer, DIP switch
 - **Target Date:** 31/07/2026
+
+## Development Period 3 - Wi-Fi Alarm Monitoring Extension
+
+**Date:** 01/08/2026 - 09/08/2026
+
+### Objective
+
+Extend the ESP32 light sensor alarm system with local Wi-Fi monitoring, allowing the alarm system status to be viewed from a browser on the same local network.
+
+### Work Completed
+
+- Added ESP32 Wi-Fi support using the built-in Wi-Fi capability.
+- Tested Wi-Fi connection using a local hotspot and confirmed that the ESP32 could obtain a local IP address.
+- Added a local web server using the ESP32 `WebServer` library.
+- Created a browser-accessible test page to confirm that the ESP32 could respond to HTTP requests.
+- Updated the Wi-Fi monitoring page to display alarm status, switch states, LED output state, buzzer output state, and automatic page refresh.
+- Integrated the V1 alarm logic with the Wi-Fi monitoring code.
+- Restructured the V1 alarm logic to run alongside the web server.
+- Replaced blocking `delay()` confirmation timing with non-blocking `millis()` timing.
+- Added a local `secrets.h` file for real Wi-Fi credentials.
+- Added `secrets.h` to `.gitignore` so that local Wi-Fi credentials are not uploaded to GitHub.
+- Added `secrets_example.h` to show the required credential format using placeholder values.
+
+### Test / Result
+
+The Wi-Fi connection test confirmed that the ESP32 could connect to a local hotspot and print its local IP address in Serial Monitor.
+
+Example Serial Monitor output:
+
+    Wi-Fi connected successfully
+    IP address: 172.20.10.10
+    Web server started
+
+The basic web server test confirmed that the ESP32 could host a local web page and respond to browser requests from a device on the same local network.
+
+The final integrated test confirmed that the ESP32 could run the hardware alarm system and provide local web monitoring at the same time. The web page displayed the current alarm status, switch states, LED output state, and buzzer output state while the hardware alarm logic continued to operate independently.
+
+### Issues / Fixes
+
+#### Issue 1 - Upload failed when flashing the larger Wi-Fi web server code
+
+**Problem:**
+The Wi-Fi web server code compiled successfully, but uploading to the ESP32 failed with a flash connection error.
+
+**Cause:**
+The program size increased after adding Wi-Fi and web server functionality. The higher upload speed was less reliable for the current USB connection.
+
+**Fix:**
+The Arduino IDE upload speed was reduced to a more stable value.
+
+**Result:**
+The code uploaded successfully after reducing the upload speed.
+
+#### Issue 2 - Hard-coded Wi-Fi credential structure could lead to accidental password exposure
+
+**Problem:**
+The first Wi-Fi code structure placed `ssid` and `password` values directly inside the main `.ino` file. Even when placeholder values are used, this structure can make it easy for users to accidentally replace them with real credentials during local testing and then upload the file to GitHub.
+
+**Cause:**
+The main `.ino` file is part of the public project code. If real Wi-Fi credentials are typed into this file for testing, they may be accidentally committed.
+
+**Fix:**
+The project was updated to use a separate local `secrets.h` file for real Wi-Fi credentials. This file is ignored by Git using `.gitignore`. A `secrets_example.h` file was added to show the required format using placeholder values.
+
+**Result:**
+The Wi-Fi configuration is now safer and more user-friendly. Real credentials stay local, while the GitHub repository still provides an example file for other users.
+
+#### Issue 3 - The V1 blocking delay structure was not suitable for Wi-Fi monitoring
+
+**Problem:**
+The original V1 alarm logic used `delay()` for dark-condition confirmation. This was acceptable for the standalone alarm prototype, but less suitable for the Wi-Fi monitoring version.
+
+**Cause:**
+A blocking delay stops the main program flow temporarily. In the Wi-Fi version, the main loop also needs to call `server.handleClient()` regularly so that browser requests can be processed.
+
+**Fix:**
+The dark-condition confirmation logic was changed to use `millis()` timing. The code records when the dark condition first appears and only triggers the alarm if the condition remains present for the required confirmation time.
+
+**Result:**
+The alarm system can still reduce false triggers from short shadows while keeping the local web server responsive.
+
+#### Issue 4 - Web monitoring needed to be separated from alarm control
+
+**Problem:**
+The earlier web monitoring test read the LDR value directly inside the web page handler. This was suitable for a simple sensor display test, but not for the final alarm monitoring system.
+
+**Cause:**
+If sensor reading and alarm control are placed only inside the web page handler, the alarm system behaviour could become dependent on browser access. The alarm should continue running even when no browser is connected.
+
+**Fix:**
+The code was restructured so that `updateAlarmSystem()` handles sensor reading, switch input, alarm decisions, and output control. The web page handler only displays the latest stored system state.
+
+**Result:**
+The alarm system runs independently from browser access, while the web page acts as a monitoring interface.
+
+### Lessons Learned
+
+- A local ESP32 web server is only accessible from devices on the same local network.
+- The IP address printed in Serial Monitor is a local network address, not a public internet address.
+- Upload speed and Serial Monitor baud rate are separate settings.
+- Larger ESP32 programs may need a lower upload speed for reliable flashing.
+- A local `secrets.h` file and `.gitignore` provide a safer structure for Wi-Fi projects.
+- A working standalone embedded system may need to be restructured before it is integrated with Wi-Fi or web server functionality.
+- Blocking `delay()` timing should be avoided when the program also needs to handle web server requests.
+- `millis()` timing allows the alarm system and web server to run together without blocking the main loop.
+- Separating alarm control logic from web page generation makes the program easier to test and extend.
+
+### Future Improvement
+
+- Improve the visual design of the monitoring page.
+- Add clearer status styling for normal, disabled, and triggered alarm states.
+- Consider adding light-level data logging in a future version.
+- Consider reorganising the code folders using clearer V1, V2, and V3 naming.
+
+### Tasks To Do
+
+- **Goal:** Update the README and project documentation to describe the Wi-Fi alarm monitoring extension.
+- **Tool:** GitHub, README, development log, Arduino IDE, ESP32 prototype
+- **Target Date:** 12/08/2026
