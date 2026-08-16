@@ -38,6 +38,9 @@ bool darkTimingStarted = false;
 unsigned long darkStartTime = 0;
 unsigned long lastUpdateTime = 0;
 
+// Function prototype for Python data output.
+void printPythonData();
+
 void updateAlarmSystem()
 {
   ldrValue = analogRead(ldrPin);
@@ -56,6 +59,8 @@ void updateAlarmSystem()
 
     digitalWrite(ledPin, LOW);
     digitalWrite(buzzerPin, HIGH);  // Active-low buzzer: HIGH means OFF.
+
+    printPythonData();
 
     return;
   }
@@ -122,6 +127,9 @@ void updateAlarmSystem()
 
   Serial.print(" | Alarm status: ");
   Serial.println(alarmTriggered == true ? "TRIGGERED" : "NORMAL");
+
+  printPythonData();
+
 }
 
 String getOnOffText(bool state)
@@ -161,6 +169,32 @@ String getLightConditionText()
   {
     return "Light";
   }
+}
+
+void printPythonData()
+{
+ /*
+   This function prints one structured data line for the Python serial data logger.
+
+   Format:
+   DATA,LDR value,Light condition,Alarm status,Alarm switch,LED switch,Buzzer switch,LED output,Buzzer output
+ */
+  Serial.print("DATA,");
+  Serial.print(ldrValue);
+  Serial.print(",");
+  Serial.print(getLightConditionText());
+  Serial.print(",");
+  Serial.print(getAlarmStatusText());
+  Serial.print(",");
+  Serial.print(alarmSwitchState == HIGH ? "ON" : "OFF");
+  Serial.print(",");
+  Serial.print(ledSwitchState == HIGH ? "ON" : "OFF");
+  Serial.print(",");
+  Serial.print(buzzerSwitchState == HIGH ? "ON" : "MUTED");
+  Serial.print(",");
+  Serial.print(ledOutputState == true ? "ON" : "OFF");
+  Serial.print(",");
+  Serial.println(buzzerOutputState == true ? "ON" : "OFF");
 }
 
 void handleHomePage()
