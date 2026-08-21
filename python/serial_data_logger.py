@@ -9,31 +9,53 @@ SERIAL_PORT = "COM5"
 BAUD_RATE = 115200
 
 
+def process_data_line(line):
+    # Split the DATA line into separate values using commas.
+    parts = line.split(",")
+
+    # A valid DATA line should contain 9 fields:
+    # DATA,LDR value,Light condition,Alarm status,Alarm switch,LED switch,Buzzer switch,LED output,Buzzer output
+    if len(parts) != 9:
+        print("Invalid DATA line:")
+        print(line)
+        return
+
+    ldr_value = parts[1]
+    light_condition = parts[2]
+    alarm_status = parts[3]
+    alarm_switch = parts[4]
+    led_switch = parts[5]
+    buzzer_switch = parts[6]
+    led_output = parts[7]
+    buzzer_output = parts[8]
+
+    print("----- ESP32 DATA -----")
+    print(f"LDR value: {ldr_value}")
+    print(f"Light condition: {light_condition}")
+    print(f"Alarm status: {alarm_status}")
+    print(f"Alarm switch: {alarm_switch}")
+    print(f"LED switch: {led_switch}")
+    print(f"Buzzer switch: {buzzer_switch}")
+    print(f"LED output: {led_output}")
+    print(f"Buzzer output: {buzzer_output}")
+
+
 def main():
-    # Print startup messages so the user knows the Python program has started.
     print("ESP32 serial reader started.")
     print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE} baud...")
 
     try:
-        # Open the ESP32 serial port.
-        # The 'with' statement automatically closes the port when the program stops.
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as esp32:
             print("Connected to ESP32.")
-            print("Reading serial data...\n")
+            print("Reading DATA lines...\n")
 
-            # Keep reading serial data until the user stops the program with Ctrl + C.
             while True:
-                # Read one line from the ESP32.
-                # decode() converts bytes into text.
-                # strip() removes extra spaces and newline characters.
                 line = esp32.readline().decode("utf-8", errors="ignore").strip()
 
-                # Only print the line if it is not empty.
-                if line:
-                    print(line)
+                if line.startswith("DATA,"):
+                    process_data_line(line)
 
     except serial.SerialException as error:
-        # This section runs if the serial connection fails.
         print("Serial connection error:")
         print(error)
 
@@ -44,6 +66,5 @@ def main():
         print("- The baud rate matches the ESP32 code.")
 
 
-# Run main() only when this file is executed directly.
 if __name__ == "__main__":
     main()
