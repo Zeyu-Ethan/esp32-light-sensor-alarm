@@ -1,3 +1,7 @@
+import csv
+from datetime import datetime
+from pathlib import Path
+
 import serial
 
 # Serial port used by the ESP32.
@@ -7,6 +11,40 @@ SERIAL_PORT = "COM5"
 # Baud rate used by the ESP32 Serial.begin() function.
 # This must match Serial.begin(115200) in the ESP32 code.
 BAUD_RATE = 115200
+
+# CSV file path.
+# The file will be saved inside the project data folder.
+CSV_FILE_PATH = Path("data") / "serial_log.csv"
+
+CSV_HEADER = [
+    "timestamp",
+    "ldr_value",
+    "light_condition",
+    "alarm_status",
+    "alarm_switch",
+    "led_switch",
+    "buzzer_switch",
+    "led_output",
+    "buzzer_output",
+]
+
+
+def create_csv_file_if_needed():
+    # Create the data folder if it does not already exist.
+    CSV_FILE_PATH.parent.mkdir(exist_ok=True)
+
+    # If the CSV file does not exist, create it and write the header row.
+    if CSV_FILE_PATH.exists() == False:
+        with open(CSV_FILE_PATH, mode="w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(CSV_HEADER)
+
+
+def save_data_to_csv(row_data):
+    # Open the CSV file in append mode and add one new row.
+    with open(CSV_FILE_PATH, mode="a", newline="", encoding="utf-8") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(row_data)
 
 
 def process_data_line(line):
@@ -20,6 +58,8 @@ def process_data_line(line):
         print(line)
         return
 
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     ldr_value = parts[1]
     light_condition = parts[2]
     alarm_status = parts[3]
@@ -29,25 +69,35 @@ def process_data_line(line):
     led_output = parts[7]
     buzzer_output = parts[8]
 
-    print("----- ESP32 DATA -----")
-    print(f"LDR value: {ldr_value}")
-    print(f"Light condition: {light_condition}")
-    print(f"Alarm status: {alarm_status}")
-    print(f"Alarm switch: {alarm_switch}")
-    print(f"LED switch: {led_switch}")
-    print(f"Buzzer switch: {buzzer_switch}")
-    print(f"LED output: {led_output}")
-    print(f"Buzzer output: {buzzer_output}")
+    row_data = [
+        timestamp,
+        ldr_value,
+        light_condition,
+        alarm_status,
+        alarm_switch,
+        led_switch,
+        buzzer_switch,
+        led_output,
+        buzzer_output,
+    ]
+
+    save_data_to_csv(row_data)
+
+    print("Saved DATA row:")
+    print(row_data)
 
 
 def main():
-    print("ESP32 serial reader started.")
+    print("ESP32 serial data logger started.")
     print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE} baud...")
+    print(f"CSV file: {CSV_FILE_PATH}")
+
+    create_csv_file_if_needed()
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as esp32:
             print("Connected to ESP32.")
-            print("Reading DATA lines...\n")
+            print("Reading and saving DATA lines...\n")
 
             while True:
                 line = esp32.readline().decode("utf-8", errors="ignore").strip()
