@@ -14,7 +14,8 @@ BAUD_RATE = 115200
 
 # CSV file path.
 # The file will be saved inside the project data folder.
-CSV_FILE_PATH = Path("data") / "serial_log.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CSV_FILE_PATH = PROJECT_ROOT / "data" / "serial_log.csv"
 
 CSV_HEADER = [
     "timestamp",
