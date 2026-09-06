@@ -387,7 +387,7 @@ The test showed that the DO output changed state when the AO value was approxima
 
 ## Development Period 3 - V3 Local Wi-Fi Alarm Monitoring
 
-**Date:** 03/08/2026 - 09/08/2026
+**Date:** 03/08/2026 - 09/08/2026; updated on 23/08/2026
 
 #### Objective
 
@@ -406,6 +406,9 @@ Extend the ESP32 light sensor alarm system with local Wi-Fi monitoring, allowing
 - Added a local `secrets.h` file for real Wi-Fi credentials.
 - Added `secrets.h` to `.gitignore` so that local Wi-Fi credentials are not uploaded to GitHub.
 - Added `secrets_example.h` to show the required credential format using placeholder values.
+- Added Wi-Fi connection timeout handling to prevent the ESP32 from waiting indefinitely if Wi-Fi connection fails.
+- Added a Wi-Fi failure message in Serial Monitor with basic troubleshooting guidance.
+- Updated the main loop so that the hardware alarm logic and Serial `DATA` output continue running even when Wi-Fi monitoring is unavailable.
 
 #### Test / Result
 
@@ -420,6 +423,8 @@ Example Serial Monitor output:
 The basic web server test confirmed that the ESP32 could host a local web page and respond to browser requests from a device on the same local network.
 
 The final integrated test confirmed that the ESP32 could run the hardware alarm system and provide local web monitoring at the same time. The web page displayed the current alarm status, switch states, LED output state, and buzzer output state while the hardware alarm logic continued to operate independently.
+
+The Wi-Fi timeout test confirmed that the ESP32 no longer waits indefinitely when Wi-Fi connection fails. After the timeout period, the program reports the connection failure in Serial Monitor and continues running the hardware alarm system without local web monitoring.
 
 #### Issues / Fixes
 
@@ -490,6 +495,8 @@ The alarm system runs independently from browser access, while the web page acts
 - Blocking `delay()` timing should be avoided when the program also needs to handle web server requests.
 - `millis()` timing allows the alarm system and web server to run together without blocking the main loop.
 - Separating alarm control logic from web page generation makes the program easier to test and extend.
+- Wi-Fi connection code should include timeout handling so that the embedded system does not become stuck during startup.
+- Network monitoring should be treated as an optional interface, while the core hardware alarm logic should continue running independently.
 
 #### Future Improvement
 
@@ -504,41 +511,54 @@ The alarm system runs independently from browser access, while the web page acts
 - **Tool:** GitHub, README, development log, Arduino IDE, ESP32 prototype
 - **Target Date:** 12/08/2026
 
-## Development Period 4 - V4 Python Serial Data Reader
+## Development Period 4 - V4 Python Data Extension
 
-### Logbook Entry 4.1 - Basic Python Serial Reader
+**Date:** 16/08/2026 - 23/08/2026
 
-**Date:** 16/08/2026
+#### Objective
+
+Extend the ESP32 project with Python-based serial data processing, CSV data logging, and basic data visualisation.
 
 #### Work Completed
 
 - Added structured `DATA` output to the ESP32 V3 Wi-Fi monitoring code.
-- Created `serial_data_logger.py` as the first Python script for reading ESP32 Serial data.
+- Created `serial_data_logger.py` for reading ESP32 Serial data from Python.
 - Installed and used the `pyserial` package for Python serial communication.
-- Confirmed that Python could connect to the ESP32 through `COM5` at `115200` baud.
-- Confirmed that Python could read structured `DATA` lines from the ESP32.
+- Updated the Python script to filter only lines beginning with `DATA,`.
+- Parsed each structured `DATA` line into separate fields, including LDR value, light condition, alarm status, switch states, and output states.
+- Added timestamped CSV logging for parsed ESP32 data.
+- Saved recorded system behaviour into `data/serial_log.csv`.
+- Created `data/sample_serial_log.csv` as sample recorded data for GitHub.
+- Created a Python plotting script to visualise recorded LDR values from CSV data.
+- Generated `data/serial_log_plot.png` to show LDR ADC values over time, the alarm threshold, and triggered alarm points.
 
 #### Test / Result
 
-The Python serial reader successfully connected to the ESP32 and displayed structured Serial data in the VS Code terminal.
+The Python serial reader successfully connected to the ESP32 through `COM5` at `115200` baud and read structured `DATA` lines from the ESP32.
 
-Example output:
+Example ESP32 data line:
 
-    DATA,816,Light,Alarm Disabled,OFF,OFF,MUTED,OFF,OFF
-    DATA,813,Light,Alarm Disabled,OFF,OFF,MUTED,OFF,OFF
+    DATA,2694,Dark,Alarm Triggered,ON,ON,ON,ON,ON
 
-This confirmed that the ESP32 could send structured status data through USB Serial and that Python could read it.
+The CSV logging test confirmed that Python could add timestamps and save parsed ESP32 data into a CSV file.
+
+Example CSV row:
+
+    2026-08-21 21:06:34,2694,Dark,Alarm Triggered,ON,ON,ON,ON,ON
+
+The visualisation test confirmed that the recorded CSV data could be used to generate a plot of LDR ADC values over time. The generated plot also showed the alarm threshold and highlighted triggered alarm points.
 
 #### Lessons Learned
 
-- `pyserial` allows Python to communicate with the ESP32 through a serial COM port.
-- The Python baud rate must match `Serial.begin(115200)` in the ESP32 code.
-- Arduino Serial Monitor and Python should not use the same COM port at the same time.
-- A structured `DATA,...` format is easier for Python to process than normal human-readable debug messages.
-- Python can be added as a PC-side extension to read and process data from the ESP32.
+- Python can be used as a PC-side extension for embedded system data logging and analysis.
+- A structured `DATA,...` Serial format is easier for Python to filter and parse than human-readable debug messages.
+- `pyserial` allows Python to read ESP32 Serial output through a COM port.
+- CSV logging provides a simple way to store sensor values and system states for later review.
+- Adding timestamps makes the recorded data more useful for analysing system behaviour over time.
+- Plotting recorded CSV data helps show how the LDR value changes and when the alarm is triggered.
 
 #### Tasks To Do
 
-- **Goal:** Update the Python script so that it only processes lines beginning with `DATA,`, splits each data line into separate values, and saves the parsed data into a CSV file with timestamps.
-- **Tool:** VS Code, Python, pyserial, ESP32, USB Serial
-- **Target Date:** 17/08/2026
+- **Goal:** Finalise project documentation and review the GitHub repository.
+- **Tool:** GitHub, README, development log, final testing notes
+- **Target Date:** 06/09/2026

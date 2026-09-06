@@ -244,7 +244,7 @@ gantt
     section Documentation
     Development log update                         :done, 2026-08-11, 1d
     Final testing notes update                     :done, 2026-08-14, 1d
-    README update and final project review         :active, 2026-08-23, 2d
+    README update and final project review         :done, 2026-08-23, 10d
 ```
 
 *Figure 4. Flexible development plan for the ESP32 light sensor alarm system, including V1 hardware alarm prototype, V2 sensor comparison, V3 Wi-Fi monitoring, and V4 Python data extension.*
